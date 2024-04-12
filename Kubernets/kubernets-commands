@@ -1,0 +1,233 @@
+*****************demo pods
+---to run pod in cluster 
+$ kubectl run nginx --image=nginx
+
+$kubectl create deployment nginx --image=nginx
+
+---to check status of pod
+$ kubectl get pods
+
+--to check pods information
+ $kubectl describe pod podname
+
+--to check where pod is running 
+
+$ kubectl get pods -o wide
+
+--- to create pod using yaml files 
+
+*****************dcreation pods
+vi podcreation.yaml
+
+apiversion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels: 
+    app: nginx-label
+    tier: fronted
+spec:
+  containers:
+  - name: ngnix-container
+    image: ngnix
+
+--to run pos from yaml
+
+$ kubectl apply -f podcreation.yaml
+
+$ kubectl get pods
+
+************ how to create replication in kubernets
+
+vi rc-definition.yml
+
+apiVersion: v1
+kind: ReplicationController
+metdata:
+  name: myapp-rc
+  labels:
+    app: myapp
+    type: front-end
+spec:
+ template:
+   metadata:
+   name: myapp-pod
+   labels: 
+     app: myapp
+     tier: frontend
+  spec:
+   containers:
+   - name: ngnix-container
+     image: ngnix
+ replicas: 3
+
+--to run replicationcontroller
+
+$ kubectl create -f rc-definition.yml
+
+--to get replicationcontroller
+
+$ kubectl get replicationcontroller
+
+$ kubectl get pods
+
+***************replicaset 
+
+--to create replicaset 
+
+vi replicaset-definition.yml
+
+apiVersion: app/v1
+kind: ReplicaSet
+metdata:
+  name: myapp-replicaset
+  labels:
+     app: myapp
+     type: frontend
+spec:
+  template:
+    metdata:
+     name: myapp-pod
+     labels:
+	app: myapp
+        type: frontend
+    spec:
+     containers:
+     - name: nginx-container
+       image: nginx
+  replicas: 4
+  selector: 
+    matchLabels:
+	typr: frontend
+
+--to run replicaset file 
+
+$ kubectl create -f replicaset-definition.yml
+
+$ kubectl get replicaset
+
+--to update ot scale replicas in yamls  below commands
+
+$ kubectl replace -f replicaset-definition.yml
+
+$ kubectl scale --replicas=6 -f replicaset-definition.yml
+
+$ kubectl scale --replicas=6 -f replicaset- myapp-replicaset
+
+$ kubectl delete replicaset myapp-replicaset
+
+$ kubectl describe replicaset
+
+
+***************kubernets deployments  
+
+deployment-definition.yml
+
+
+
+apiVersion: app/v1
+kind: Deployment
+metdata:
+  name: httpd-fronten
+  labels:
+     app: myapp
+     type: frontend
+spec:
+  template:
+    metdata:
+     name: myapp-pod
+     labels:
+	app: myapp
+        type: frontend
+    spec:
+     containers:
+     - name: nginx-container
+       image: nginx
+  replicas: 4
+  selector: 
+    matchLabels:
+	typr: frontend
+
+$ kubectl create -f deployment-definitio.yml
+
+$ Kubectl apply -f deployment-my-app.yml
+
+$ kubectl get deployments
+
+$ kubectl delete deployment httpd-frontend
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: httpd-frontend
+  template:
+    metadata:
+      labels:
+        name: httpd-frontend
+    spec:
+      containers:
+      - name: httpd-frontend
+        image: httpd:2.4-alpine
+
+$ kubectl create deployment httpd-frontend --image=https:2.4-alpine --replicas=3      
+
+$kubectl get deploy   
+
+**********Deployments – Update and Rollback   
+
+$ kubectl apply -f my-own.yml
+
+$ kubectl set image deployment /myapp-deployment \ nginx-conatiner=nginx:1.9.1   
+
+create 
+$ kubectl create -f my-ownapp.yml
+
+GET
+$kubectl get deployments 
+
+Update
+$kubectl apply -f my-ownapp.yml
+
+$ kubectl set image deployment /myapp-deployment \ nginx-conatiner=nginx:1.9.1 
+
+Status
+$ Kubectl rollout status deployment/myapp-deployment
+
+kubectl rollout history deployemnt/myapp-deployment
+
+Rollback
+$ kubectl rollout undo deployment/myapp-deployment
+
+$ kubectl create -f my-ownapp.yml --record
+
+---to edit deployment 
+
+$  kubectl edit deployment myapp
+
+
+**************kube
+
+
+               
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
