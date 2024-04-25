@@ -1,0 +1,48 @@
+pipeline {
+environment {
+imagename = "clinistats-ehr-appointment"
+registryCredential = 'aws-creds-pp'
+dockerImage = ''
+}
+agent any
+stages {
+stage('Cloning Git') {
+steps {
+ git branch: 'APPOINTMENT_QA2', credentialsId: 'git-access', url: 'https://gitlab.com/clinistats/clinistatsehr/ribhus-emr-appointment.git'
+}
+}
+ stage('Stage: Maven Build'){    
+            steps {
+                //Generate Artifact through maven build       
+            sh "mvn package spring-boot:repackage"           
+        }
+    }
+stage('Build a docker image') {
+      steps{
+        script {
+           dir("${env.workspace}/rest") {
+           dockerImage = docker.build("${imagename}:${env.BUILD_ID}")
+           }
+        }
+}
+}
+stage('Deploy Image') {
+steps{
+script {
+// This step should not normally be used in your script. Consult the inline help for details.
+docker.withRegistry('https://189248465192.dkr.ecr.us-east-1.amazonaws.com','ecr:us-east-1:aws-creds-pp', ) {
+dockerImage.push()
+
+}
+}
+}
+}
+stage('Remove image') {
+steps{
+script {
+sh "docker rmi $imagename:$env.BUILD_ID"
+}
+}
+}
+}
+}
