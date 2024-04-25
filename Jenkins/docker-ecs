@@ -1,0 +1,109 @@
+//start jenkins pipeline for to deploy lastest code in ecs(AWS)
+//golbal varialbe 
+
+def myVar = 'initial_value'
+
+pipeline {
+
+//environment varialbe 
+
+environment {
+imagename = "cc-billing"
+registryCredential = 'aws-creds-cc-production'
+dockerImage = ''
+}
+agent any
+
+stages {
+
+// On this first stage we clone application code from repestive repository
+ 
+stage('Stage:Git checkout') {
+
+	steps {
+		git branch: 'release-v1.0', credentialsId: 'git-access', url: 'https://gitlab.com/clinistats/caricomcare/caricomcare-billing.git'
+		}
+	}
+	
+// On this second stage we build application code with maven 
+	
+stage('Stage: Maven Build'){    
+            steps {
+                //Generate Artifact through maven build       
+            sh "mvn package spring-boot:repackage"             
+        }
+    }
+	
+// on this third stage we create git tag and build docker image and push repestive image to ECR 	
+
+stage('Stage:build and push Image') {
+
+steps{
+  
+script {
+   sh 'git rev-parse --short HEAD > OutGitTag'
+
+   myVar = readFile('OutGitTag').trim()
+   
+   echo "gitTag value is ${myVar}"
+   
+
+docker.withRegistry('https://691255316630.dkr.ecr.us-east-1.amazonaws.com','ecr:us-east-1:aws-creds-cc-production', ) {
+      
+    def myImage = docker.build("${imagename}")
+	
+    myImage.push("${myVar}")
+    	
+				}
+
+			}
+		}
+	}
+	
+// On this stage fourth we checkout terraform scripts from appropriate repository
+
+stage('Stage:Git checkout ') { 
+            steps {
+				// Get some code from a GitLab repository
+       git branch: 'cc-terraform-scripts', credentialsId: 'gitlab-devops', url: 'https://gitlab.com/clinistats/devops.git'
+            }
+        }
+		
+//	On this last stage we login into aws,latest gittag added to json file and excute terraform commands
+
+stage('Stage:awskeys'){
+        steps{
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws-cc-prod', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']])  {
+                
+		        sh 'aws s3 ls'
+         
+          dir("${env.workspace}/terraform/caricomcare-services-fargate-scripts/"){
+		  
+                sh "ls -ltr"
+				
+                echo "gitTag values in deploy awskeys is ${myVar}"
+            
+                sh """
+			 
+                sed -i 's/ECR-LATEST-IMAGES/${myVar}/g' cc-billing.tfvars.json
+			 
+                """
+                sh "cat cc-billing.tfvars.json"
+				
+				//To excute terraform script
+            
+                sh "terraform init -backend-config=\"bucket=caricomcare-terraform-states\" -backend-config=\"key=cc-billing-state/cc-billing-state.tfstate\" -backend-config=\"region=us-east-1\""
+        
+                sh "terraform plan -input=false -var-file=\"cc-billing.tfvars.json\""
+				
+                sh "terraform apply -auto-approve -input=false -var-file=\"cc-billing.tfvars.json\""
+				
+              //sh "terraform destroy -auto-approve -input=false -var-file=\"cc-billing.tfvars.json\""
+
+            }
+        }
+    }
+  }        
+ }
+}
+
