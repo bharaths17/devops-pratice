@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "mark-tucker.aws-cli-configure",
+        "hashicorp.hcl",
+        "amazonwebservices.aws-toolkit-vscode"
+    ]
+}
