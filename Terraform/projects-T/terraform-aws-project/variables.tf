@@ -1,0 +1,6 @@
+variable "cidr" {
+  description = "vpc cidr"
+  default     = "10.0.0.0/16"
+
+
+}
