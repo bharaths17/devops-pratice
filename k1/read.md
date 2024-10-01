@@ -35,3 +35,6 @@ In Kubernetes, the architecture is divided into two main planes: the **Control P
 
 ## Summary
 Kubernetes is built on a robust architecture that separates control and data planes, consisting of essential components that work together to orchestrate containerized applications efficiently. Understanding these components is crucial for managing and scaling applications effectively within a Kubernetes cluster.
+
+![image](https://github.com/user-attachments/assets/b1384bf1-68ea-4fa0-9f13-d9838f358b2e)
+
